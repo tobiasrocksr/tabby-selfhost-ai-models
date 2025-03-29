@@ -4,7 +4,10 @@
 export PORT=8080
 export DEVICE="metal"  # metal cho Mac M1/M2, cuda cho NVIDIA GPU, cpu cho máy không có GPU
 export DATA_DIR="$HOME/.tabby"
-export JWT_SECRET="tabby-secure-token-do-not-change"  # Token bí mật cố định cho tất cả các lần chạy
+# Generate UUID format JWT secret if not already set
+if [ -z "$JWT_SECRET" ] || [ "$JWT_SECRET" = "tabby-secure-token-do-not-change" ]; then
+    export JWT_SECRET=$(uuidgen)
+fi
 export CHAT_MODEL="Qwen2-1.5B-Instruct"
 
 # Biến toàn cục khác
@@ -24,6 +27,14 @@ load_config() {
         echo "Đang đọc cấu hình từ $CONFIG_FILE..."
         source "$CONFIG_FILE"
     fi
+    
+    # Validate UUID format and regenerate if invalid
+    if ! [[ $JWT_SECRET =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+        export JWT_SECRET=$(uuidgen)
+        save_config
+    fi
+    
+    echo "JWT Secret: $JWT_SECRET"
 }
 
 # Lưu cấu hình hiện tại vào file
