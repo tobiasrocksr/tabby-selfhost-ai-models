@@ -51,6 +51,7 @@ show_banner() {
     echo "    ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ "
     echo "===================================================="
     echo "  AI Coding Assistant - Self-Hosted OpenSource"
+    echo "  Access URL: http://localhost:$PORT"
     echo "===================================================="
     echo ""
     sleep 2
@@ -62,7 +63,47 @@ if ! check_tabby_installed; then
 fi
 
 # Hiển thị banner
+# After banner display and before main loop
 show_banner
+
+# Setup client configuration
+setup_client_config() {
+    local config_dir="$HOME/.tabby-client/agent"
+    mkdir -p "$config_dir"
+    
+    # Ensure JWT_SECRET has a default value
+    local client_token="${JWT_SECRET:-tabby-secure-token-do-not-change}"
+    
+    cat > "$config_dir/config.toml" << EOL
+[server]
+endpoint = "http://localhost:$PORT"
+token = ""
+
+[completion]
+enable = true
+prompt_template = "default"
+
+[telemetry]
+enable = false
+EOL
+    echo "Client configuration has been updated at $config_dir/config.toml"
+    sleep 2
+}
+
+# Setup client configuration
+setup_client_config
+
+change_port() {
+    read -p "Enter new port number (default: 8080): " new_port
+    if [[ -n "$new_port" ]]; then
+        PORT=$new_port
+        setup_client_config  # Update client config with new port
+        echo "Port changed to: $PORT"
+    else
+        echo "Using default port: $PORT"
+    fi
+    sleep 2
+}
 
 # Main loop
 while true; do
